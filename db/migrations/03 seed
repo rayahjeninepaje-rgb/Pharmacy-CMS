@@ -1,0 +1,66 @@
+-- ============================================================
+-- HopeCMS - Seed Data
+-- Hope, Inc. Customer Management System
+-- ============================================================
+-- Run this AFTER the base HopeDB tables are created.
+-- ============================================================
+
+-- ============================================================
+-- MODULES
+-- ============================================================
+INSERT INTO module VALUES ('Cust_Mod',  'Customer Module', 'ACTIVE', 'SEEDED');
+INSERT INTO module VALUES ('Sales_Mod', 'Sales Module',    'ACTIVE', 'SEEDED');
+INSERT INTO module VALUES ('Prod_Mod',  'Product Module',  'ACTIVE', 'SEEDED');
+INSERT INTO module VALUES ('Adm_Mod',   'Admin Module',    'ACTIVE', 'SEEDED');
+
+-- ============================================================
+-- RIGHTS
+-- ============================================================
+INSERT INTO rights VALUES ('CUST_VIEW',  'View Customers',       1, 'Cust_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('CUST_ADD',   'Add Customer',         1, 'Cust_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('CUST_EDIT',  'Edit Customer',        1, 'Cust_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('CUST_DEL',   'Soft Delete Customer', 1, 'Cust_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('SALES_VIEW', 'View Sales',           1, 'Sales_Mod', 'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('SD_VIEW',    'View Sales Detail',    1, 'Sales_Mod', 'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('PROD_VIEW',  'View Products',        1, 'Prod_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('PRICE_VIEW', 'View Price History',   1, 'Prod_Mod',  'ACTIVE', 'SEEDED');
+INSERT INTO rights VALUES ('ADM_USER',   'Admin Activate User',  1, 'Adm_Mod',   'ACTIVE', 'SEEDED');
+
+-- ============================================================
+-- SUPERADMIN USER SEED
+-- Email: jcesperanza@neu.edu.ph
+-- NOTE: Replace <AUTH_UUID> with the actual UUID from
+--       Supabase Authentication > Users after creating
+--       the account via dashboard invite.
+-- ============================================================
+INSERT INTO "user" (userid, email, user_type, record_status)
+VALUES ('<AUTH_UUID>', 'jcesperanza@neu.edu.ph', 'SUPERADMIN', 'ACTIVE')
+ON CONFLICT (userid) DO UPDATE
+  SET user_type = 'SUPERADMIN', record_status = 'ACTIVE';
+
+-- ============================================================
+-- SUPERADMIN MODULE ACCESS
+-- ============================================================
+INSERT INTO user_module (userid, moduleid, rights_value)
+VALUES
+  ('<AUTH_UUID>', 'Cust_Mod',  1),
+  ('<AUTH_UUID>', 'Sales_Mod', 1),
+  ('<AUTH_UUID>', 'Prod_Mod',  1),
+  ('<AUTH_UUID>', 'Adm_Mod',   1)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- SUPERADMIN RIGHTS (all 9 rights = 1)
+-- ============================================================
+INSERT INTO user_module_rights (userid, rightid, right_value)
+VALUES
+  ('<AUTH_UUID>', 'CUST_VIEW',  1),
+  ('<AUTH_UUID>', 'CUST_ADD',   1),
+  ('<AUTH_UUID>', 'CUST_EDIT',  1),
+  ('<AUTH_UUID>', 'CUST_DEL',   1),
+  ('<AUTH_UUID>', 'SALES_VIEW', 1),
+  ('<AUTH_UUID>', 'SD_VIEW',    1),
+  ('<AUTH_UUID>', 'PROD_VIEW',  1),
+  ('<AUTH_UUID>', 'PRICE_VIEW', 1),
+  ('<AUTH_UUID>', 'ADM_USER',   1)
+ON CONFLICT DO NOTHING;

@@ -1,0 +1,76 @@
+-- ============================================================
+-- HopeCMS - Trigger & Functions
+-- Hope, Inc. Customer Management System
+-- ============================================================
+
+-- ============================================================
+-- TRIGGER: provision_new_user
+-- Fires on every new Supabase Auth signup (email or Google).
+-- Auto-provisions the account as USER / INACTIVE with
+-- default VIEW rights only.
+-- ============================================================
+CREATE OR REPLACE FUNCTION provision_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Insert user row as USER / INACTIVE
+  INSERT INTO public.user (userid, email, user_type, record_status)
+  VALUES (NEW.id::text, NEW.email, 'USER', 'INACTIVE')
+  ON CONFLICT (userid) DO NOTHING;
+
+  -- Assign module access
+  INSERT INTO public.user_module (userid, moduleid, rights_value)
+  VALUES
+    (NEW.id::text, 'Cust_Mod',  1),
+    (NEW.id::text, 'Sales_Mod', 1),
+    (NEW.id::text, 'Prod_Mod',  1),
+    (NEW.id::text, 'Adm_Mod',   0)
+  ON CONFLICT DO NOTHING;
+
+  -- Assign default rights: VIEW rights = 1, all CRUD/admin = 0
+  INSERT INTO public.user_module_rights (userid, rightid, right_value)
+  VALUES
+    (NEW.id::text, 'CUST_VIEW',  1),
+    (NEW.id::text, 'CUST_ADD',   0),
+    (NEW.id::text, 'CUST_EDIT',  0),
+    (NEW.id::text, 'CUST_DEL',   0),
+    (NEW.id::text, 'SALES_VIEW', 1),
+    (NEW.id::text, 'SD_VIEW',    1),
+    (NEW.id::text, 'PROD_VIEW',  1),
+    (NEW.id::text, 'PRICE_VIEW', 1),
+    (NEW.id::text, 'ADM_USER',   0)
+  ON CONFLICT DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Attach trigger to auth.users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION provision_new_user();
+
+-- ============================================================
+-- FUNCTION: get_all_users
+-- Used by Admin Panel to fetch all users bypassing RLS.
+-- SECURITY DEFINER ensures it runs as DB owner.
+-- ============================================================
+CREATE OR REPLACE FUNCTION get_all_users()
+RETURNS TABLE (
+  userid        text,
+  email         text,
+  username      text,
+  user_type     text,
+  record_status text,
+  created_at    timestamptz
+)
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT userid, email, username, user_type, record_status, created_at
+  FROM public.user
+  ORDER BY email;
+$$;

@@ -1,0 +1,110 @@
+-- ============================================================
+-- HopeCMS - RLS Policies
+-- Hope, Inc. Customer Management System
+-- ============================================================
+
+-- ============================================================
+-- TABLE: customer
+-- ============================================================
+
+-- SELECT: USER sees ACTIVE only; ADMIN/SUPERADMIN see all
+CREATE POLICY cust_visibility ON customer
+FOR SELECT TO authenticated
+USING (
+  record_status = 'ACTIVE'
+  OR EXISTS (
+    SELECT 1 FROM public.user
+    WHERE userid = auth.uid()::text
+    AND user_type IN ('ADMIN', 'SUPERADMIN')
+  )
+);
+
+-- INSERT: only users with CUST_ADD = 1
+CREATE POLICY cust_insert ON customer
+FOR INSERT TO authenticated
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.user_module_rights
+    WHERE userid = auth.uid()::text
+    AND rightid = 'CUST_ADD'
+    AND right_value = 1
+  )
+);
+
+-- UPDATE (edit): only users with CUST_EDIT = 1
+CREATE POLICY cust_update ON customer
+FOR UPDATE TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.user_module_rights
+    WHERE userid = auth.uid()::text
+    AND rightid = 'CUST_EDIT'
+    AND right_value = 1
+  )
+);
+
+-- UPDATE record_status to INACTIVE (soft delete): only CUST_DEL = 1
+CREATE POLICY cust_soft_delete ON customer
+FOR UPDATE TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.user_module_rights
+    WHERE userid = auth.uid()::text
+    AND rightid = 'CUST_DEL'
+    AND right_value = 1
+  )
+);
+
+-- ============================================================
+-- TABLE: sales (VIEW ONLY)
+-- ============================================================
+CREATE POLICY sales_select_only ON sales
+FOR SELECT TO authenticated USING (true);
+-- No INSERT, UPDATE, or DELETE policies — blocked by default.
+
+-- ============================================================
+-- TABLE: salesdetail (VIEW ONLY)
+-- ============================================================
+CREATE POLICY salesdetail_select_only ON salesdetail
+FOR SELECT TO authenticated USING (true);
+-- No INSERT, UPDATE, or DELETE policies — blocked by default.
+
+-- ============================================================
+-- TABLE: product (VIEW ONLY)
+-- ============================================================
+CREATE POLICY product_select_only ON product
+FOR SELECT TO authenticated USING (true);
+-- No INSERT, UPDATE, or DELETE policies — blocked by default.
+
+-- ============================================================
+-- TABLE: pricehist (VIEW ONLY)
+-- ============================================================
+CREATE POLICY pricehist_select_only ON pricehist
+FOR SELECT TO authenticated USING (true);
+-- No INSERT, UPDATE, or DELETE policies — blocked by default.
+
+-- ============================================================
+-- TABLE: user
+-- ============================================================
+
+-- SELECT: each user can read their own row
+CREATE POLICY admin_and_self_view ON "user"
+FOR SELECT TO authenticated
+USING (
+  userid = auth.uid()::text
+);
+
+-- UPDATE: ADMIN can update record_status only for non-SUPERADMIN users
+CREATE POLICY admin_manage_users ON "user"
+FOR UPDATE TO authenticated
+USING (
+  userid = auth.uid()::text
+  OR (
+    EXISTS (
+      SELECT 1 FROM public.user
+      WHERE userid = auth.uid()::text
+      AND user_type IN ('ADMIN', 'SUPERADMIN')
+    )
+    AND user_type != 'SUPERADMIN'
+  )
+);

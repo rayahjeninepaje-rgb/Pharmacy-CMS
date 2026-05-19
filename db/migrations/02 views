@@ -1,0 +1,65 @@
+-- ============================================================
+-- HopeCMS - SQL Views
+-- Hope, Inc. Customer Management System
+-- ============================================================
+
+-- ============================================================
+-- VIEW: product_current_price
+-- Latest price per product from priceHist
+-- ============================================================
+CREATE OR REPLACE VIEW product_current_price AS
+SELECT
+  p.prodcode,
+  p.description,
+  p.unit,
+  ph.unitprice,
+  ph.effdate AS priceeffdate
+FROM product p
+JOIN pricehist ph ON ph.prodcode = p.prodcode
+WHERE ph.effdate = (
+  SELECT MAX(effdate) FROM pricehist WHERE prodcode = p.prodcode
+)
+ORDER BY p.prodcode;
+
+-- ============================================================
+-- VIEW: customer_sales_summary
+-- Total transactions + total spend per customer
+-- ============================================================
+CREATE OR REPLACE VIEW customer_sales_summary AS
+SELECT
+  c.custno,
+  c.custname,
+  c.payterm,
+  c.record_status,
+  COUNT(DISTINCT s.transno)         AS totaltransactions,
+  SUM(sd.quantity * ph.unitprice)   AS totalspend,
+  MAX(s.salesdate)                  AS lastsaledate
+FROM customer c
+LEFT JOIN sales s         ON s.custno = c.custno
+LEFT JOIN salesdetail sd  ON sd.transno = s.transno
+LEFT JOIN (
+  SELECT prodcode, unitprice FROM pricehist ph1
+  WHERE effdate = (SELECT MAX(effdate) FROM pricehist WHERE prodcode = ph1.prodcode)
+) ph ON ph.prodcode = sd.prodcode
+GROUP BY c.custno, c.custname, c.payterm, c.record_status
+ORDER BY totalspend DESC NULLS LAST;
+
+-- ============================================================
+-- VIEW: product_revenue
+-- Total qty sold and total revenue per product
+-- ============================================================
+CREATE OR REPLACE VIEW product_revenue AS
+SELECT
+  p.prodcode,
+  p.description,
+  p.unit,
+  SUM(sd.quantity)                  AS totalqtysold,
+  SUM(sd.quantity * ph.unitprice)   AS totalrevenue
+FROM product p
+JOIN salesdetail sd ON sd.prodcode = p.prodcode
+JOIN (
+  SELECT prodcode, unitprice FROM pricehist ph1
+  WHERE effdate = (SELECT MAX(effdate) FROM pricehist WHERE prodcode = ph1.prodcode)
+) ph ON ph.prodcode = p.prodcode
+GROUP BY p.prodcode, p.description, p.unit
+ORDER BY totalrevenue DESC;
