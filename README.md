@@ -2,7 +2,7 @@
 🔗 [Live Application](https://pharmacy-cms-pi.vercel.app/login)
 
 ---
-A web-based Customer Management System built for Hope, Inc. as a 6-week capstone project for BS Information System. The system manages customers and provides read-only views of purchase history with role-based access control.
+A web-based Customer Management System built for Hope, Inc. as a 6-week capstone project for BS Information Technology. The system manages customers and provides read-only views of purchase history with role-based access control.
 
 **Course:** Information Management 2 | New Era University  
 **Instructor:** Jeremias C. Esperanza  
