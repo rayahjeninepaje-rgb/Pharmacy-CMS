@@ -1,6 +1,6 @@
 # HopeCMS — Hope, Inc. Customer Management System
 
-A web-based Customer Management System built for Hope, Inc. as a 6-week capstone project for BS Computer Science. The system manages customers and provides read-only views of purchase history with role-based access control.
+A web-based Customer Management System built for Hope, Inc. that manages customer records and provides read-only views of purchase history with role-based access control.
 
 **Course:** Information Management 2 | New Era University  
 **Instructor:** Jeremias C. Esperanza  
