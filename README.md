@@ -1,5 +1,7 @@
 # HopeCMS — Hope, Inc. Customer Management System
+🔗 [Live Application](https://pharmacy-cms-pi.vercel.app/login)
 
+---
 A web-based Customer Management System built for Hope, Inc. that manages customer records and provides read-only views of purchase history with role-based access control.
 
 **Course:** Information Management 2 | New Era University  
